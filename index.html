@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>行ったお店ログ</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background: #fff;
+      color: #1f2328;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 56px 24px 96px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+      margin: 0 0 32px;
+    }
+    form, .card {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 20px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.07);
+    }
+    form {
+      padding: 28px;
+      display: grid;
+      gap: 20px;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: .85rem;
+      color: #6b7280;
+    }
+    input[type="text"],
+    select {
+      font: inherit;
+      font-size: 1rem;
+      color: inherit;
+      padding: 12px 14px;
+      border: 1px solid #e2e4e8;
+      border-radius: 12px;
+      background: #fff;
+    }
+    input[type="text"]::placeholder { color: #b6bac1; }
+    input[type="text"]:focus-visible,
+    select:focus-visible {
+      outline: 2px solid #1f2328;
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+    input[aria-invalid="true"] { border-color: #b3261e; }
+    .error {
+      font-size: .85rem;
+      color: #b3261e;
+      margin: 0;
+    }
+    .stars {
+      border: none;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+    }
+    .stars legend {
+      padding: 0;
+      margin-bottom: 4px;
+      font-size: .85rem;
+      color: #6b7280;
+    }
+    .stars label {
+      display: inline-block;
+      font-size: 2rem;
+      line-height: 1;
+      padding: 2px 3px;
+      color: #d9dce1;
+      cursor: pointer;
+    }
+    .stars label.on { color: #f2a900; }
+    .stars input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+    .stars label:has(input:focus-visible) {
+      outline: 2px solid #1f2328;
+      outline-offset: 1px;
+      border-radius: 6px;
+    }
+    input[type="file"] {
+      font: inherit;
+      font-size: .9rem;
+      color: #6b7280;
+    }
+    input[type="file"]::file-selector-button {
+      font: inherit;
+      margin-right: 12px;
+      padding: 8px 16px;
+      border: 1px solid #e2e4e8;
+      border-radius: 10px;
+      background: #fff;
+      color: #1f2328;
+      cursor: pointer;
+    }
+    input[type="file"]::file-selector-button:hover { background: #f6f7f8; }
+    button {
+      font: inherit;
+      font-size: 1rem;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: #1f2328;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover { background: #3a3f47; }
+    button:focus-visible {
+      outline: 2px solid #1f2328;
+      outline-offset: 2px;
+    }
+    .previews {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .previews:empty { display: none; }
+    .previews img {
+      width: 68px;
+      height: 68px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #f3f4f6;
+    }
+    .note {
+      font-size: .85rem;
+      color: #b3261e;
+      margin: 0;
+    }
+    #list {
+      list-style: none;
+      padding: 0;
+      margin: 48px 0 0;
+      display: grid;
+      gap: 32px;
+    }
+    .card { overflow: hidden; }
+    .photos {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: #d5d8dd transparent;
+    }
+    .photos img {
+      display: block;
+      flex: 0 0 100%;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #f3f4f6;
+      scroll-snap-align: start;
+    }
+    .card .body {
+      padding: 24px 28px 28px;
+    }
+    .card .name {
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    .card .rating {
+      margin: 8px 0 0;
+      font-size: 1.1rem;
+      line-height: 1;
+      letter-spacing: 2px;
+      color: #d9dce1;
+    }
+    .card .rating .on { color: #f2a900; }
+    .card .comment {
+      margin: 12px 0 0;
+      font-size: .95rem;
+      overflow-wrap: anywhere;
+    }
+    .card .date,
+    .card .count {
+      font-size: .8rem;
+      color: #8b9099;
+      margin: 6px 0 0;
+    }
+    .card .delete {
+      margin-top: 20px;
+      padding: 8px 18px;
+      font-size: .85rem;
+      background: #fff;
+      color: #b3261e;
+      border: 1px solid #ecd5d3;
+    }
+    .card .delete:hover { background: #fdf3f2; }
+    .card .delete:focus-visible { outline-color: #b3261e; }
+    .backup {
+      margin-top: 72px;
+      padding-top: 32px;
+      border-top: 1px solid #eef0f2;
+    }
+    .backup h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+    .backup p {
+      font-size: .85rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .backup .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .backup button {
+      padding: 10px 20px;
+      font-size: .9rem;
+      background: #fff;
+      color: #1f2328;
+      border: 1px solid #e2e4e8;
+    }
+    .backup button:hover { background: #f6f7f8; }
+    .backup button:disabled { opacity: .5; cursor: default; }
+    .backup .status { margin-top: 14px; color: #1f2328; }
+    .backup .status:empty { display: none; }
+    .empty {
+      text-align: center;
+      color: #a3a8b0;
+      margin: 64px 0 0;
+    }
+    @media (max-width: 480px) {
+      main { padding: 36px 16px 72px; }
+      form { padding: 22px; }
+      .card .body { padding: 20px 22px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>行ったお店ログ</h1>
+
+    <form id="form" novalidate>
+      <label>
+        店名
+        <input type="text" id="name" placeholder="例：喫茶ひだまり" aria-describedby="name-error">
+        <span class="error" id="name-error" role="alert" hidden>店名を入力してください</span>
+      </label>
+      <label>
+        場所（都道府県）
+        <select id="place">
+          <option value="">選択しない</option>
+        </select>
+      </label>
+      <fieldset class="stars" id="stars">
+        <legend>評価</legend>
+      </fieldset>
+      <label>
+        ひとこと
+        <input type="text" id="comment" placeholder="例：プリンが固めでおいしい">
+      </label>
+      <label>
+        写真（最大10枚）
+        <input type="file" id="photo" accept="image/*" multiple>
+      </label>
+      <div class="previews" id="previews"></div>
+      <p class="note" id="note" hidden></p>
+      <button type="submit">追加</button>
+    </form>
+
+    <p class="empty" id="empty">まだ記録がありません</p>
+    <ul id="list"></ul>
+
+    <section class="backup">
+      <h2>バックアップ</h2>
+      <p>記録を写真ごと1つのファイルに書き出したり、そのファイルから復元したりできます。</p>
+      <div class="buttons">
+        <button type="button" id="export">ファイルに書き出す</button>
+        <button type="button" id="import">ファイルから復元</button>
+      </div>
+      <input type="file" id="import-file" hidden>
+      <p class="status" id="backup-status" role="status"></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('form');
+    const nameInput = document.getElementById('name');
+    const nameError = document.getElementById('name-error');
+    const placeSelect = document.getElementById('place');
+    const starsField = document.getElementById('stars');
+    const commentInput = document.getElementById('comment');
+    const photoInput = document.getElementById('photo');
+    const list = document.getElementById('list');
+    const empty = document.getElementById('empty');
+
+    // ---- IndexedDB ----
+    const DB_NAME = 'shop-log';
+    const STORE = 'visits';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function addVisit(db, visit) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const req = tx.objectStore(STORE).add(visit);
+        tx.oncomplete = () => resolve(req.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function addVisits(db, visits) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        for (const v of visits) store.add(v);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    }
+
+    function deleteVisit(db, id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function getAllVisits(db) {
+      return new Promise((resolve, reject) => {
+        const req = db.transaction(STORE).objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // ---- 表示 ----
+    function createCard(visit) {
+      const li = document.createElement('li');
+      li.className = 'card';
+
+      // 以前の形式（photo: 1枚）の記録も表示できるようにする
+      const photos = visit.photos || (visit.photo ? [visit.photo] : []);
+      if (photos.length > 0) {
+        const strip = document.createElement('div');
+        strip.className = 'photos';
+        photos.forEach((blob, i) => {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(blob);
+          img.alt = `${visit.name}（${i + 1}枚目）`;
+          strip.appendChild(img);
+        });
+        li.appendChild(strip);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'body';
+
+      const title = document.createElement('p');
+      title.className = 'name';
+      title.textContent = visit.name;
+
+      const date = document.createElement('p');
+      date.className = 'date';
+
+      // 場所・評価・ひとことが無い以前の記録は、その行を出さない
+      date.textContent = [visit.place, new Date(visit.createdAt).toLocaleString('ja-JP')]
+        .filter(Boolean).join('・');
+
+      body.append(title, date);
+
+      if (visit.rating) {
+        const stars = document.createElement('p');
+        stars.className = 'rating';
+        stars.setAttribute('role', 'img');
+        stars.setAttribute('aria-label', `評価 ${visit.rating} / ${MAX_RATING}`);
+        for (let i = 1; i <= MAX_RATING; i++) {
+          const s = document.createElement('span');
+          s.textContent = '★';
+          if (i <= visit.rating) s.className = 'on';
+          stars.appendChild(s);
+        }
+        body.appendChild(stars);
+      }
+
+      if (visit.comment) {
+        const comment = document.createElement('p');
+        comment.className = 'comment';
+        comment.textContent = visit.comment;
+        body.appendChild(comment);
+      }
+
+      if (photos.length > 1) {
+        const count = document.createElement('p');
+        count.className = 'count';
+        count.textContent = `写真 ${photos.length}枚（横にスワイプ）`;
+        body.appendChild(count);
+      }
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'delete';
+      del.textContent = '削除';
+      del.addEventListener('click', async () => {
+        if (!confirm(`「${visit.name}」を削除しますか？`)) return;
+        try {
+          const db = await dbReady;
+          await deleteVisit(db, visit.id);
+        } catch (err) {
+          console.error(err);
+          alert('削除に失敗しました');
+          return;
+        }
+        for (const img of li.querySelectorAll('img')) URL.revokeObjectURL(img.src);
+        li.remove();
+        empty.hidden = list.children.length > 0;
+      });
+      body.appendChild(del);
+
+      li.appendChild(body);
+      return li;
+    }
+
+    function renderAll(visits) {
+      for (const img of list.querySelectorAll('img')) URL.revokeObjectURL(img.src);
+      // 新しい順（同じ日時なら後から保存したものを上に）
+      visits.sort((a, b) => b.createdAt - a.createdAt || b.id - a.id);
+      list.replaceChildren(...visits.map(createCard));
+      empty.hidden = visits.length > 0;
+    }
+
+    // ---- 場所（都道府県） ----
+    const PREFECTURES = [
+      '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
+      '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+      '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+      '徳島県', '香川県', '愛媛県', '高知県',
+      '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県',
+    ];
+    for (const pref of PREFECTURES) placeSelect.add(new Option(pref, pref));
+
+    // ---- 星の評価 ----
+    const MAX_RATING = 5;
+    let rating = 0; // 0 は未評価
+
+    for (let i = 1; i <= MAX_RATING; i++) {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'rating';
+      input.value = i;
+      input.setAttribute('aria-label', `星${i}つ`);
+      // 選択中の星をもう一度押すと未評価に戻す
+      input.addEventListener('click', () => {
+        setRating(rating === i ? 0 : i);
+      });
+      label.append(input, '★');
+      starsField.appendChild(label);
+    }
+
+    function setRating(value) {
+      rating = value;
+      starsField.querySelectorAll('label').forEach((label, idx) => {
+        label.classList.toggle('on', idx < rating);
+        label.firstChild.checked = idx + 1 === rating;
+      });
+    }
+
+    // ---- 店名の入力チェック ----
+    function showNameError(show) {
+      nameError.hidden = !show;
+      nameInput.setAttribute('aria-invalid', String(show));
+    }
+
+    nameInput.addEventListener('input', () => {
+      if (nameInput.value.trim()) showNameError(false);
+    });
+
+    // ---- 追加前のプレビュー ----
+    const MAX_PHOTOS = 10;
+    const previews = document.getElementById('previews');
+    const note = document.getElementById('note');
+    let selectedPhotos = [];
+
+    function clearPreviews() {
+      for (const img of previews.querySelectorAll('img')) URL.revokeObjectURL(img.src);
+      previews.replaceChildren();
+    }
+
+    function setSelectedPhotos(files) {
+      clearPreviews();
+      selectedPhotos = files.slice(0, MAX_PHOTOS);
+
+      note.hidden = files.length <= MAX_PHOTOS;
+      note.textContent = `${files.length}枚選ばれたので、先頭の${MAX_PHOTOS}枚だけ使います`;
+
+      for (const file of selectedPhotos) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = file.name;
+        previews.appendChild(img);
+      }
+    }
+
+    photoInput.addEventListener('change', () => {
+      setSelectedPhotos([...photoInput.files]);
+    });
+
+    // ---- 起動 ----
+    const dbReady = openDB();
+
+    dbReady
+      .then(getAllVisits)
+      .then(renderAll)
+      .catch((err) => {
+        console.error(err);
+        empty.textContent = '保存データを読み込めませんでした';
+      });
+
+    // ---- バックアップ（書き出し・復元） ----
+    // ファイルの中身: 目印(8バイト) + JSONの長さ(4バイト) + JSON(店の情報) + 写真データ
+    // 写真は変換せず、元のデータをそのまま後ろにつなげる
+    const BACKUP_MAGIC = 'SHOPLOG1';
+    const BACKUP_HEAD = BACKUP_MAGIC.length + 4;
+    const exportButton = document.getElementById('export');
+    const importButton = document.getElementById('import');
+    const importFile = document.getElementById('import-file');
+    const backupStatus = document.getElementById('backup-status');
+
+    async function buildBackup() {
+      const visits = await getAllVisits(await dbReady);
+      const photoBlobs = [];
+      const meta = visits.map((v) => {
+        const photos = v.photos || (v.photo ? [v.photo] : []);
+        photoBlobs.push(...photos);
+        return {
+          name: v.name,
+          place: v.place || '',
+          rating: v.rating || 0,
+          comment: v.comment || '',
+          createdAt: v.createdAt,
+          photos: photos.map((p) => ({ type: p.type, size: p.size })),
+        };
+      });
+
+      const json = new TextEncoder().encode(
+        JSON.stringify({ version: 1, exportedAt: Date.now(), visits: meta })
+      );
+      const jsonLength = new DataView(new ArrayBuffer(4));
+      jsonLength.setUint32(0, json.length, true);
+
+      return {
+        count: visits.length,
+        blob: new Blob([BACKUP_MAGIC, jsonLength, json, ...photoBlobs], {
+          type: 'application/octet-stream',
+        }),
+      };
+    }
+
+    async function readBackup(file) {
+      const head = await file.slice(0, BACKUP_HEAD).arrayBuffer();
+      const magic = new TextDecoder().decode(head.slice(0, BACKUP_MAGIC.length));
+      if (head.byteLength < BACKUP_HEAD || magic !== BACKUP_MAGIC) {
+        throw new Error('このアプリのバックアップファイルではありません');
+      }
+
+      const jsonLength = new DataView(head).getUint32(BACKUP_MAGIC.length, true);
+      let offset = BACKUP_HEAD + jsonLength;
+      let data;
+      try {
+        data = JSON.parse(await file.slice(BACKUP_HEAD, offset).text());
+      } catch {
+        throw new Error('バックアップファイルが壊れています');
+      }
+      if (!data || !Array.isArray(data.visits)) throw new Error('バックアップファイルが壊れています');
+
+      const visits = data.visits.map((v) => {
+        if (typeof v.name !== 'string' || typeof v.createdAt !== 'number' || !Array.isArray(v.photos)) {
+          throw new Error('バックアップファイルが壊れています');
+        }
+        return {
+          name: v.name,
+          place: v.place || '',
+          rating: v.rating || 0,
+          comment: v.comment || '',
+          createdAt: v.createdAt,
+          photos: v.photos.map((p) => {
+            const blob = file.slice(offset, offset + p.size, p.type);
+            offset += p.size;
+            return blob;
+          }),
+        };
+      });
+
+      // 写真データの合計がファイルの大きさと合わなければ、途中で切れている
+      if (offset !== file.size) throw new Error('バックアップファイルが壊れています');
+      return visits;
+    }
+
+    // 今ある記録は消さずに足す。同じ記録（店名と日時が同じ）は重複させない
+    async function restoreBackup(file) {
+      const incoming = await readBackup(file);
+      const db = await dbReady;
+      const key = (v) => `${v.createdAt}|${v.name}`;
+      const existing = new Set((await getAllVisits(db)).map(key));
+
+      const toAdd = incoming.filter((v) => !existing.has(key(v)));
+      toAdd.sort((a, b) => a.createdAt - b.createdAt);
+      await addVisits(db, toAdd);
+
+      renderAll(await getAllVisits(db));
+      return { added: toAdd.length, skipped: incoming.length - toAdd.length };
+    }
+
+    function backupFileName() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `omise-log_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.shoplog`;
+    }
+
+    exportButton.addEventListener('click', async () => {
+      exportButton.disabled = true;
+      try {
+        const { blob, count } = await buildBackup();
+        if (count === 0) {
+          backupStatus.textContent = '書き出す記録がありません';
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = backupFileName();
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+        backupStatus.textContent = `${count}件を「${a.download}」に書き出しました`;
+      } catch (err) {
+        console.error(err);
+        backupStatus.textContent = '書き出しに失敗しました';
+      } finally {
+        exportButton.disabled = false;
+      }
+    });
+
+    importButton.addEventListener('click', () => importFile.click());
+
+    importFile.addEventListener('change', async () => {
+      const file = importFile.files[0];
+      if (!file) return;
+      importButton.disabled = true;
+      backupStatus.textContent = '復元しています…';
+      try {
+        const { added, skipped } = await restoreBackup(file);
+        backupStatus.textContent = skipped > 0
+          ? `${added}件を復元しました（${skipped}件はすでにあるので飛ばしました）`
+          : `${added}件を復元しました`;
+      } catch (err) {
+        console.error(err);
+        backupStatus.textContent = `復元できませんでした：${err.message}`;
+      } finally {
+        importFile.value = '';
+        importButton.disabled = false;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) {
+        showNameError(true);
+        nameInput.focus();
+        return;
+      }
+
+      // 写真は撮ったままのファイル（Blob）をそのまま保存する
+      const visit = {
+        name,
+        place: placeSelect.value,
+        rating,
+        comment: commentInput.value.trim(),
+        photos: selectedPhotos,
+        createdAt: Date.now(),
+      };
+
+      try {
+        const db = await dbReady;
+        visit.id = await addVisit(db, visit);
+      } catch (err) {
+        console.error(err);
+        alert('保存に失敗しました');
+        return;
+      }
+
+      // 新しい順に並べるため先頭に追加
+      list.prepend(createCard(visit));
+      empty.hidden = true;
+
+      form.reset();
+      setRating(0);
+      setSelectedPhotos([]);
+      nameInput.focus();
+    });
+  </script>
+</body>
+</html>

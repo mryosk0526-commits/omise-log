@@ -635,6 +635,17 @@
 
       const toAdd = incoming.filter((v) => !existing.has(key(v)));
       toAdd.sort((a, b) => a.createdAt - b.createdAt);
+
+      // 選んだファイルを指したまま保存すると、あとで写真を読めなくなる端末がある。
+      // 写真の中身を読み込んで、独立したデータにしてから保存する
+      for (const v of toAdd) {
+        const loaded = [];
+        for (const p of v.photos) {
+          loaded.push(new Blob([await p.arrayBuffer()], { type: p.type }));
+        }
+        v.photos = loaded;
+      }
+
       await addVisits(db, toAdd);
 
       renderAll(await getAllVisits(db));
